@@ -1,0 +1,23 @@
+{
+  "name": "rachio-supervisor",
+  "version": "0.1.0",
+  "description": "Rachio irrigation controller — schedule management, water usage monitoring, and visual inspection",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "status": "tsx src/index.ts status",
+    "zones": "tsx src/index.ts zones",
+    "schedules": "tsx src/index.ts schedules"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
