@@ -52,6 +52,15 @@ export function analyzeSnapshot(
       });
     }
 
+    if (currentSchedule.status === 'UNKNOWN') {
+      alerts.push({
+        severity: 'warning',
+        code: 'schedule_status_unavailable',
+        deviceId: device.id,
+        message: `${device.name} current watering status is unavailable`,
+      });
+    }
+
     if (device.zones.length === 0) {
       alerts.push({
         severity: 'warning',

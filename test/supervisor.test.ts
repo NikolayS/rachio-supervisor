@@ -71,6 +71,12 @@ describe('analyzeSnapshot', () => {
     assert.equal(alerts[0].code, 'no_enabled_schedules');
   });
 
+  it('warns when current watering status is unavailable', () => {
+    const alerts = analyzeSnapshot(snapshot(undefined, { status: 'UNKNOWN' }));
+
+    assert.equal(alerts[0].code, 'schedule_status_unavailable');
+  });
+
   it('can flag disabled zones when policy asks for it', () => {
     const alerts = analyzeSnapshot(
       snapshot({ zones: [{ id: 'zone-1', zoneNumber: 1, name: 'Citrus', enabled: false }] }),

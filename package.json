@@ -12,7 +12,8 @@
     "zones": "tsx src/index.ts zones",
     "schedules": "tsx src/index.ts schedules",
     "check": "tsx src/index.ts check",
-    "test": "node --import tsx --test test/*.test.ts"
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
     "axios": "^1.7.0",
