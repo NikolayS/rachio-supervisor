@@ -2,6 +2,7 @@
   "name": "rachio-supervisor",
   "version": "0.1.0",
   "description": "Rachio irrigation controller — schedule management, water usage monitoring, and visual inspection",
+  "license": "Apache-2.0",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

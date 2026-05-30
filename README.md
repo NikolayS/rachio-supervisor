@@ -25,3 +25,7 @@ npm test                # Run offline unit tests
 - Schedule enable/disable
 - Zone runtime overrides
 - Camera integration (visual leak/problem detection)
+
+## License
+
+Apache-2.0. See [LICENSE](LICENSE).
