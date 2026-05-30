@@ -29,6 +29,10 @@ export interface RachioClient {
   ): Promise<WaterUsageSummary>;
 }
 
+interface PersonInfo {
+  id: string;
+}
+
 class AxiosTransport implements HttpTransport {
   private readonly publicApi: AxiosInstance;
   private readonly cloudApi: AxiosInstance;
@@ -60,8 +64,9 @@ export function createRachioClient(
   transport: HttpTransport = new AxiosTransport(token)
 ): RachioClient {
   return {
-    getInfo() {
-      return transport.get<AccountInfo>('/person/info');
+    async getInfo() {
+      const person = await transport.get<PersonInfo>('/person/info');
+      return transport.get<AccountInfo>(`/person/${person.id}`);
     },
 
     getDevice(deviceId: string) {

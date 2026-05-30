@@ -20,7 +20,8 @@ class FakeTransport implements HttpTransport {
 describe('createRachioClient', () => {
   it('maps account and schedule calls to documented Rachio endpoints', async () => {
     const transport = new FakeTransport();
-    transport.responses.set('/person/info', { username: 'nik', email: 'n@example.com', devices: [] });
+    transport.responses.set('/person/info', { id: 'person-1' });
+    transport.responses.set('/person/person-1', { username: 'nik', email: 'n@example.com', devices: [] });
     transport.responses.set('/device/dev-1/current_schedule', { status: 'NOT_RUNNING' });
 
     const client = createRachioClient('token', transport);
@@ -30,7 +31,11 @@ describe('createRachioClient', () => {
 
     assert.deepEqual(
       transport.calls.map((call) => `${call.method} ${call.url}`),
-      ['GET /person/info', 'GET /device/dev-1/current_schedule']
+      [
+        'GET /person/info',
+        'GET /person/person-1',
+        'GET /device/dev-1/current_schedule',
+      ]
     );
   });
 
