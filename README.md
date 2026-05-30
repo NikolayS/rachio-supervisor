@@ -14,7 +14,9 @@ Control and monitor Rachio irrigation systems via the Rachio API.
 npm run dev status      # Show all devices, zones, current schedule
 npm run dev zones       # List all zones with IDs
 npm run dev schedules   # Show all schedule rules
+npm run dev check       # Exit non-zero on critical irrigation alerts
 npm run dev stop        # Stop all active watering
+npm test                # Run offline unit tests
 ```
 
 ## Planned

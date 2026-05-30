@@ -1,63 +1,107 @@
-import axios from 'axios';
+import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import type {
+  AccountInfo,
+  CurrentSchedule,
+  WaterUsageSummary,
+} from './types';
 
-const BASE = 'https://api.rach.io/1/public';
+const PUBLIC_API_BASE = 'https://api.rach.io/1/public';
+const CLOUD_REST_API_BASE = 'https://cloud-rest.rach.io';
 
-export function client(token: string) {
-  const http = axios.create({
-    baseURL: BASE,
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export interface HttpTransport {
+  get<T>(url: string, options?: AxiosRequestConfig): Promise<T>;
+  put<T>(url: string, body?: unknown, options?: AxiosRequestConfig): Promise<T>;
+}
 
+export interface RachioClient {
+  getInfo(): Promise<AccountInfo>;
+  getDevice(deviceId: string): Promise<unknown>;
+  getCurrentSchedule(deviceId: string): Promise<CurrentSchedule>;
+  startZone(zoneId: string, durationSeconds: number): Promise<void>;
+  stopDevice(deviceId: string): Promise<void>;
+  getScheduleRule(scheduleId: string): Promise<unknown>;
+  startSchedule(scheduleId: string): Promise<void>;
+  skipSchedule(scheduleId: string): Promise<void>;
+  getWaterUsage(
+    deviceId: string,
+    startTs: number,
+    endTs: number
+  ): Promise<WaterUsageSummary>;
+}
+
+class AxiosTransport implements HttpTransport {
+  private readonly publicApi: AxiosInstance;
+  private readonly cloudApi: AxiosInstance;
+
+  constructor(token: string) {
+    const headers = { Authorization: `Bearer ${token}` };
+    this.publicApi = axios.create({ baseURL: PUBLIC_API_BASE, headers });
+    this.cloudApi = axios.create({ baseURL: CLOUD_REST_API_BASE, headers });
+  }
+
+  async get<T>(url: string, options?: AxiosRequestConfig): Promise<T> {
+    const api = url.startsWith('/summary/') ? this.cloudApi : this.publicApi;
+    const response = await api.get<T>(url, options);
+    return response.data as T;
+  }
+
+  async put<T>(
+    url: string,
+    body?: unknown,
+    options?: AxiosRequestConfig
+  ): Promise<T> {
+    const response = await this.publicApi.put<T>(url, body, options);
+    return response.data as T;
+  }
+}
+
+export function createRachioClient(
+  token: string,
+  transport: HttpTransport = new AxiosTransport(token)
+): RachioClient {
   return {
-    // Account & devices
-    async getInfo() {
-      const { data } = await http.get('/person/info');
-      return data;
+    getInfo() {
+      return transport.get<AccountInfo>('/person/info');
     },
 
-    async getDevice(deviceId: string) {
-      const { data } = await http.get(`/device/${deviceId}`);
-      return data;
+    getDevice(deviceId: string) {
+      return transport.get<unknown>(`/device/${deviceId}`);
     },
 
-    async getCurrentSchedule(deviceId: string) {
-      const { data } = await http.get(`/device/${deviceId}/current_schedule`);
-      return data;
+    getCurrentSchedule(deviceId: string) {
+      return transport.get<CurrentSchedule>(
+        `/device/${deviceId}/current_schedule`
+      );
     },
 
-    // Zones
     async startZone(zoneId: string, durationSeconds: number) {
-      await http.put('/zone/start', { id: zoneId, duration: durationSeconds });
+      await transport.put('/zone/start', {
+        id: zoneId,
+        duration: durationSeconds,
+      });
     },
 
     async stopDevice(deviceId: string) {
-      await http.put('/device/stop_water', { id: deviceId });
+      await transport.put('/device/stop_water', { id: deviceId });
     },
 
-    // Schedules
-    async getScheduleRule(scheduleId: string) {
-      const { data } = await http.get(`/schedulerule/${scheduleId}`);
-      return data;
+    getScheduleRule(scheduleId: string) {
+      return transport.get<unknown>(`/schedulerule/${scheduleId}`);
     },
 
     async startSchedule(scheduleId: string) {
-      await http.put('/schedulerule/start', { id: scheduleId });
+      await transport.put('/schedulerule/start', { id: scheduleId });
     },
 
     async skipSchedule(scheduleId: string) {
-      await http.put('/schedulerule/skip', { id: scheduleId });
+      await transport.put('/schedulerule/skip', { id: scheduleId });
     },
 
-    // Water usage (cloud-rest API)
-    async getWaterUsage(deviceId: string, startTs: number, endTs: number) {
-      const { data } = await axios.get(
-        `https://cloud-rest.rach.io/summary/device/${deviceId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { start: startTs, end: endTs },
-        }
+    getWaterUsage(deviceId: string, startTs: number, endTs: number) {
+      return transport.get<WaterUsageSummary>(
+        `/summary/device/${deviceId}`,
+        { params: { start: startTs, end: endTs } }
       );
-      return data;
     },
   };
 }
