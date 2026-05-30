@@ -2,6 +2,7 @@
   "name": "rachio-supervisor",
   "version": "0.1.0",
   "description": "Rachio irrigation controller — schedule management, water usage monitoring, and visual inspection",
+  "license": "Apache-2.0",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -9,7 +10,10 @@
     "dev": "tsx src/index.ts",
     "status": "tsx src/index.ts status",
     "zones": "tsx src/index.ts zones",
-    "schedules": "tsx src/index.ts schedules"
+    "schedules": "tsx src/index.ts schedules",
+    "check": "tsx src/index.ts check",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
     "axios": "^1.7.0",
