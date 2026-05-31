@@ -61,10 +61,64 @@ export async function runCli(
       break;
     }
 
+    case 'schedule-start': {
+      const selector = requiredArg(argv, 1, 'schedule-start <schedule-id-or-name>');
+      const info = await rachio.getInfo();
+      const rule = findScheduleRule(info, selector);
+      await rachio.startSchedule(rule.id);
+      log(`Started schedule: ${rule.name} [${rule.id}]`);
+      break;
+    }
+
+    case 'schedule-skip': {
+      const selector = requiredArg(argv, 1, 'schedule-skip <schedule-id-or-name>');
+      const info = await rachio.getInfo();
+      const rule = findScheduleRule(info, selector);
+      await rachio.skipSchedule(rule.id);
+      log(`Skipped next schedule run: ${rule.name} [${rule.id}]`);
+      break;
+    }
+
     default:
-      log('Commands: status | zones | schedules | check | stop');
+      log('Commands: status | zones | schedules | check | stop | schedule-start <id-or-name> | schedule-skip <id-or-name>');
       process.exitCode = 1;
   }
+}
+
+function requiredArg(argv: string[], index: number, usage: string): string {
+  const value = argv[index]?.trim();
+  if (!value) {
+    throw new Error(`Usage: ${usage}`);
+  }
+
+  return value;
+}
+
+function findScheduleRule(
+  info: Awaited<ReturnType<RachioClient['getInfo']>>,
+  selector: string
+) {
+  const normalized = selector.toLowerCase();
+  const rules = info.devices.flatMap((device) => device.scheduleRules);
+  const matches = rules.filter((rule) => {
+    return (
+      rule.id === selector ||
+      rule.name.toLowerCase() === normalized ||
+      rule.externalName?.toLowerCase() === normalized
+    );
+  });
+
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+  if (matches.length > 1) {
+    throw new Error(
+      `Schedule selector "${selector}" is ambiguous; use the schedule ID`
+    );
+  }
+
+  throw new Error(`Schedule not found: ${selector}`);
 }
 
 function exitCodeForAlerts(alerts: ReturnType<typeof analyzeSnapshot>): number {

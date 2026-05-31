@@ -64,6 +64,24 @@ describe('runCli', () => {
 
     assert.deepEqual(app.calls, ['getInfo', 'stopDevice:dev-1']);
   });
+
+  it('starts schedules by exact name', async () => {
+    const app = createTestApp();
+
+    await app.run(['schedule-start', 'Morning']);
+
+    assert.deepEqual(app.calls, ['getInfo', 'startSchedule:sched-1']);
+    assert.match(app.output.join('\n'), /Started schedule: Morning \[sched-1\]/);
+  });
+
+  it('skips schedules by id', async () => {
+    const app = createTestApp();
+
+    await app.run(['schedule-skip', 'sched-1']);
+
+    assert.deepEqual(app.calls, ['getInfo', 'skipSchedule:sched-1']);
+    assert.match(app.output.join('\n'), /Skipped next schedule run: Morning \[sched-1\]/);
+  });
 });
 
 function createTestApp(account: AccountInfo = healthyAccount) {

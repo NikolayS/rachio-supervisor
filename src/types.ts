@@ -13,6 +13,21 @@ export interface ScheduleRule {
   enabled: boolean;
   days?: string[] | null;
   startTime?: string | null;
+  startDate?: number | null;
+  summary?: string | null;
+  totalDuration?: number | null;
+  etSkip?: boolean | null;
+  cycleSoak?: boolean | null;
+  cycleSoakStatus?: string | null;
+  externalName?: string | null;
+  zones?: ScheduleZoneRule[] | null;
+}
+
+export interface ScheduleZoneRule {
+  id?: string | null;
+  zoneId?: string | null;
+  duration?: number | null;
+  sortOrder?: number | null;
 }
 
 export interface Device {
