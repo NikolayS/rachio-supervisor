@@ -20,6 +20,16 @@ const snapshot: IrrigationSnapshot = {
             enabled: true,
             days: ['MONDAY', 'WEDNESDAY'],
             startTime: '05:00',
+            summary: 'Every Monday and Wednesday at 5:00 AM',
+            totalDuration: 600,
+            etSkip: true,
+            zones: [
+              {
+                zoneId: 'zone-1',
+                duration: 600,
+                sortOrder: 1,
+              },
+            ],
           },
         ],
       },
@@ -46,7 +56,12 @@ describe('formatters', () => {
       formatZones(snapshot),
       'Front Controller\t1\tCitrus\tzone-1'
     );
-    assert.match(formatSchedules(snapshot), /Morning \[sched-1\]/);
+    const schedules = formatSchedules(snapshot);
+    assert.match(schedules, /Morning \[sched-1\]/);
+    assert.match(schedules, /Summary: Every Monday and Wednesday at 5:00 AM/);
+    assert.match(schedules, /Total: 10min/);
+    assert.match(schedules, /Weather skip: on/);
+    assert.match(schedules, /Z1 Citrus: 10min/);
   });
 
   it('formats an OK check and alert list', () => {

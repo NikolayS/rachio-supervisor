@@ -46,13 +46,41 @@ export function formatSchedules(snapshot: IrrigationSnapshot): string {
   const lines: string[] = [];
 
   for (const { device } of snapshot.devices) {
+    const zonesById = new Map(device.zones.map((zone) => [zone.id, zone]));
+
     lines.push(`Device: ${device.name}`);
     for (const rule of device.scheduleRules) {
       const days = rule.days?.join(', ') ?? 'flexible';
+      const summary = rule.summary ?? `${days}, start ${rule.startTime ?? 'unknown'}`;
+      const totalMinutes = rule.totalDuration
+        ? `${Math.round(rule.totalDuration / 60)}min`
+        : 'unknown duration';
+      const weatherSkip = rule.etSkip === undefined || rule.etSkip === null
+        ? 'unknown'
+        : rule.etSkip
+          ? 'on'
+          : 'off';
+
       lines.push(`  ${rule.name} [${rule.id}]`);
       lines.push(
-        `     Enabled: ${rule.enabled}, Days: ${days}, Start: ${rule.startTime ?? 'unknown'}`
+        `     Enabled: ${rule.enabled}, Summary: ${summary}, Total: ${totalMinutes}, Weather skip: ${weatherSkip}`
       );
+
+      const zoneRules = [...(rule.zones ?? [])].sort(
+        (left, right) => (left.sortOrder ?? 0) - (right.sortOrder ?? 0)
+      );
+
+      for (const zoneRule of zoneRules) {
+        const zoneId = zoneRule.zoneId ?? zoneRule.id;
+        const zone = zoneId ? zonesById.get(zoneId) : undefined;
+        const duration = zoneRule.duration
+          ? `${Math.round(zoneRule.duration / 60)}min`
+          : 'unknown';
+        const order = zoneRule.sortOrder ? `${zoneRule.sortOrder}. ` : '';
+        lines.push(
+          `       - ${order}Z${zone?.zoneNumber ?? '?'} ${zone?.name?.trim() ?? zoneId ?? 'unknown zone'}: ${duration}`
+        );
+      }
     }
   }
 

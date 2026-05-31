@@ -45,11 +45,13 @@ describe('createRachioClient', () => {
 
     await client.startZone('zone-1', 300);
     await client.stopDevice('device-1');
+    await client.startSchedule('schedule-1');
     await client.skipSchedule('schedule-1');
 
     assert.deepEqual(transport.calls, [
       { method: 'PUT', url: '/zone/start', body: { id: 'zone-1', duration: 300 }, options: undefined },
       { method: 'PUT', url: '/device/stop_water', body: { id: 'device-1' }, options: undefined },
+      { method: 'PUT', url: '/schedulerule/start', body: { id: 'schedule-1' }, options: undefined },
       { method: 'PUT', url: '/schedulerule/skip', body: { id: 'schedule-1' }, options: undefined },
     ]);
   });
