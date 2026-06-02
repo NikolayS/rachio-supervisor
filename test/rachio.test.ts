@@ -23,11 +23,13 @@ describe('createRachioClient', () => {
     transport.responses.set('/person/info', { id: 'person-1' });
     transport.responses.set('/person/person-1', { username: 'nik', email: 'n@example.com', devices: [] });
     transport.responses.set('/device/dev-1/current_schedule', { status: 'NOT_RUNNING' });
+    transport.responses.set('/device/dev-1/event', []);
 
     const client = createRachioClient('token', transport);
 
     assert.equal((await client.getInfo()).username, 'nik');
     assert.equal((await client.getCurrentSchedule('dev-1')).status, 'NOT_RUNNING');
+    assert.deepEqual(await client.getDeviceEvents('dev-1', 10, 20), []);
 
     assert.deepEqual(
       transport.calls.map((call) => `${call.method} ${call.url}`),
@@ -35,8 +37,12 @@ describe('createRachioClient', () => {
         'GET /person/info',
         'GET /person/person-1',
         'GET /device/dev-1/current_schedule',
+        'GET /device/dev-1/event',
       ]
     );
+    assert.deepEqual(transport.calls[3].options, {
+      params: { startTime: 10, endTime: 20 },
+    });
   });
 
   it('sends command payloads without leaking transport details to callers', async () => {

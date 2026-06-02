@@ -55,6 +55,32 @@ export interface WaterUsageSummary {
   [key: string]: unknown;
 }
 
+export interface DeviceEvent {
+  id?: string;
+  deviceId?: string;
+  category?: string;
+  type?: string;
+  eventDate?: number;
+  summary?: string;
+  subType?: string;
+  hidden?: boolean;
+  topic?: string;
+  scheduleId?: string;
+  duration?: number;
+  durationInMinutes?: number;
+  zoneNumber?: number;
+  zoneName?: string;
+  payload?: {
+    durationSeconds?: string | number;
+    endTime?: string;
+    runType?: string;
+    startTime?: string;
+    zoneNumber?: string | number;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 export interface DeviceSnapshot {
   device: Device;
   currentSchedule: CurrentSchedule;
@@ -73,4 +99,30 @@ export interface Alert {
   message: string;
   deviceId?: string;
   zoneId?: string;
+}
+
+export interface DeviceWateringReview {
+  device: Pick<Device, 'id' | 'name'>;
+  startTs: number;
+  endTs: number;
+  eventCount: number;
+  wateringEventCount: number;
+  completedZoneRuns: number;
+  stoppedZoneRuns: number;
+  startedZoneRuns: number;
+  completedScheduleRuns: number;
+  estimatedWateringMinutes: number;
+  weatherSkipCount: number;
+  weatherNotSkippedCount: number;
+  seasonalAdjustmentCount: number;
+  recentWateringSummaries: string[];
+  recentNonWateringSummaries: string[];
+  notes: string[];
+}
+
+export interface WateringReview {
+  days: number;
+  startTs: number;
+  endTs: number;
+  devices: DeviceWateringReview[];
 }

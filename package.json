@@ -12,6 +12,8 @@
     "zones": "tsx src/index.ts zones",
     "schedules": "tsx src/index.ts schedules",
     "check": "tsx src/index.ts check",
+    "review": "tsx src/index.ts review",
+    "report": "tsx src/index.ts report",
     "test": "node --import tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },

@@ -28,6 +28,22 @@ describe('runCli', () => {
     assert.match(app.output.join('\n'), /OK: no irrigation alerts/);
   });
 
+  it('prints report with current status, alerts, and recent watering review', async () => {
+    const app = createTestApp();
+
+    const exitCode = await app.run(['report', '2']);
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(app.calls, [
+      'getInfo',
+      'getCurrentSchedule:dev-1',
+      'getInfo',
+      'getDeviceEvents:dev-1',
+    ]);
+    assert.match(app.output.join('\n'), /Check summary:\nOK: no irrigation alerts/);
+    assert.match(app.output.join('\n'), /Watering health review: last 2 days/);
+  });
+
   it('returns 1 for warning check output', async () => {
     const app = createTestApp({
       ...healthyAccount,
@@ -139,6 +155,17 @@ function fakeClient(account: AccountInfo, calls: string[]): RachioClient {
     async getWaterUsage(deviceId: string, startTs: number, endTs: number) {
       calls.push(`getWaterUsage:${deviceId}:${startTs}:${endTs}`);
       return {};
+    },
+    async getDeviceEvents(deviceId: string) {
+      calls.push(`getDeviceEvents:${deviceId}`);
+      return [
+        {
+          topic: 'WATERING',
+          subType: 'ZONE_COMPLETED',
+          eventDate: Date.now(),
+          summary: 'Citrus completed watering at 05:30 AM (PDT) for 10 minutes.',
+        },
+      ];
     },
   };
 }

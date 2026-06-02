@@ -3,11 +3,16 @@ import {
   formatAlerts,
   formatSchedules,
   formatStatus,
+  formatWateringReview,
   formatZones,
 } from './format';
 import { createRachioClient } from './rachio';
 import type { RachioClient } from './rachio';
-import { analyzeSnapshot, getIrrigationSnapshot } from './supervisor';
+import {
+  analyzeSnapshot,
+  getIrrigationSnapshot,
+  getWateringReview,
+} from './supervisor';
 import type { AppConfig } from './config';
 
 export interface CliDeps {
@@ -52,6 +57,30 @@ export async function runCli(
       break;
     }
 
+    case 'review': {
+      const review = await getWateringReview(rachio, { days: optionalDaysArg(argv, 1) });
+      log(formatWateringReview(review));
+      break;
+    }
+
+    case 'report': {
+      const snapshot = await getIrrigationSnapshot(rachio);
+      const alerts = analyzeSnapshot(snapshot);
+      const review = await getWateringReview(rachio, { days: optionalDaysArg(argv, 1) });
+      log(
+        [
+          formatStatus(snapshot),
+          '',
+          'Check summary:',
+          formatAlerts(alerts),
+          '',
+          formatWateringReview(review),
+        ].join('\n')
+      );
+      process.exitCode = exitCodeForAlerts(alerts);
+      break;
+    }
+
     case 'stop': {
       const info = await rachio.getInfo();
       for (const device of info.devices) {
@@ -80,7 +109,7 @@ export async function runCli(
     }
 
     default:
-      log('Commands: status | zones | schedules | check | stop | schedule-start <id-or-name> | schedule-skip <id-or-name>');
+      log('Commands: status | zones | schedules | check | review [days] | report [days] | stop | schedule-start <id-or-name> | schedule-skip <id-or-name>');
       process.exitCode = 1;
   }
 }
@@ -92,6 +121,20 @@ function requiredArg(argv: string[], index: number, usage: string): string {
   }
 
   return value;
+}
+
+function optionalDaysArg(argv: string[], index: number): number | undefined {
+  const value = argv[index]?.trim();
+  if (!value) {
+    return undefined;
+  }
+
+  const days = Number(value);
+  if (!Number.isFinite(days) || days <= 0 || days > 7) {
+    throw new Error('Usage: review [days] where days is > 0 and <= 7');
+  }
+
+  return days;
 }
 
 function findScheduleRule(

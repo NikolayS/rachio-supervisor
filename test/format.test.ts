@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { formatAlerts, formatSchedules, formatStatus, formatZones } from '../src/format';
+import {
+  formatAlerts,
+  formatSchedules,
+  formatStatus,
+  formatWateringReview,
+  formatZones,
+} from '../src/format';
 import type { IrrigationSnapshot } from '../src/types';
 
 const snapshot: IrrigationSnapshot = {
@@ -76,5 +82,38 @@ describe('formatters', () => {
       ]),
       'CRITICAL device_offline: Front Controller is OFFLINE'
     );
+  });
+
+  it('formats a recent watering health review', () => {
+    const review = formatWateringReview({
+      days: 2,
+      startTs: 0,
+      endTs: 1,
+      devices: [
+        {
+          device: { id: 'dev-1', name: 'Front Controller' },
+          startTs: 0,
+          endTs: 1,
+          eventCount: 4,
+          wateringEventCount: 2,
+          completedZoneRuns: 1,
+          stoppedZoneRuns: 0,
+          startedZoneRuns: 1,
+          completedScheduleRuns: 1,
+          estimatedWateringMinutes: 12,
+          weatherSkipCount: 1,
+          weatherNotSkippedCount: 1,
+          seasonalAdjustmentCount: 0,
+          recentWateringSummaries: ['Citrus completed watering for 12 minutes.'],
+          recentNonWateringSummaries: ['Morning was not skipped because weather looked fine.'],
+          notes: [],
+        },
+      ],
+    });
+
+    assert.match(review, /Watering health review: last 2 days/);
+    assert.match(review, /Watered: 1 completed zone run\(s\), 12 estimated min/);
+    assert.match(review, /no obvious watering-health issues/);
+    assert.match(review, /Citrus completed watering/);
   });
 });
