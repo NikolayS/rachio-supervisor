@@ -2,6 +2,7 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
 import type {
   AccountInfo,
   CurrentSchedule,
+  DeviceEvent,
   WaterUsageSummary,
 } from './types';
 
@@ -27,6 +28,11 @@ export interface RachioClient {
     startTs: number,
     endTs: number
   ): Promise<WaterUsageSummary>;
+  getDeviceEvents(
+    deviceId: string,
+    startTs: number,
+    endTs: number
+  ): Promise<DeviceEvent[]>;
 }
 
 interface PersonInfo {
@@ -106,6 +112,13 @@ export function createRachioClient(
       return transport.get<WaterUsageSummary>(
         `/summary/device/${deviceId}`,
         { params: { start: startTs, end: endTs } }
+      );
+    },
+
+    getDeviceEvents(deviceId: string, startTs: number, endTs: number) {
+      return transport.get<DeviceEvent[]>(
+        `/device/${deviceId}/event`,
+        { params: { startTime: startTs, endTime: endTs } }
       );
     },
   };

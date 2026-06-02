@@ -1,4 +1,4 @@
-import type { Alert, IrrigationSnapshot } from './types';
+import type { Alert, IrrigationSnapshot, WateringReview } from './types';
 
 export function formatStatus(snapshot: IrrigationSnapshot): string {
   const lines: string[] = [
@@ -95,4 +95,40 @@ export function formatAlerts(alerts: Alert[]): string {
   return alerts
     .map((alert) => `${alert.severity.toUpperCase()} ${alert.code}: ${alert.message}`)
     .join('\n');
+}
+
+export function formatWateringReview(review: WateringReview): string {
+  const lines: string[] = [
+    `Watering health review: last ${review.days} day${review.days === 1 ? '' : 's'}`,
+  ];
+
+  for (const deviceReview of review.devices) {
+    lines.push('');
+    lines.push(`Device: ${deviceReview.device.name}`);
+    lines.push(
+      `  Events: ${deviceReview.eventCount} total, ${deviceReview.wateringEventCount} watering`
+    );
+    lines.push(
+      `  Watered: ${deviceReview.completedZoneRuns} completed zone run(s), ${Math.round(deviceReview.estimatedWateringMinutes)} estimated min`
+    );
+    lines.push(
+      `  Schedules: ${deviceReview.completedScheduleRuns} completed, ${deviceReview.weatherSkipCount} weather skip(s), ${deviceReview.weatherNotSkippedCount} not-skipped weather check(s)`
+    );
+
+    if (deviceReview.notes.length === 0) {
+      lines.push('  Notes: no obvious watering-health issues');
+    } else {
+      lines.push(`  Notes: ${deviceReview.notes.join('; ')}`);
+    }
+
+    for (const summary of deviceReview.recentWateringSummaries.slice(0, 3)) {
+      lines.push(`  - ${summary}`);
+    }
+
+    for (const summary of deviceReview.recentNonWateringSummaries.slice(0, 2)) {
+      lines.push(`  - ${summary}`);
+    }
+  }
+
+  return lines.join('\n');
 }

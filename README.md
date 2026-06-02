@@ -15,6 +15,8 @@ npm run dev status      # Show all devices, zones, current schedule
 npm run dev zones       # List all zones with IDs
 npm run dev schedules   # Show all schedule rules
 npm run dev check       # Exit non-zero on critical irrigation alerts
+npm run dev review      # Summarize recent watering/event health, default 2 days
+npm run dev report      # Human report: status + alerts + recent watering health
 npm run dev stop        # Stop all active watering
 npm run dev schedule-start "<schedule-id-or-name>"  # Start a schedule manually
 npm run dev schedule-skip "<schedule-id-or-name>"   # Skip the next schedule run

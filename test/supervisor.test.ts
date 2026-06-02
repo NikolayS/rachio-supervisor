@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { analyzeSnapshot, getIrrigationSnapshot } from '../src/supervisor';
+import {
+  analyzeSnapshot,
+  getIrrigationSnapshot,
+  getWateringReview,
+} from '../src/supervisor';
 import type { AccountInfo, IrrigationSnapshot } from '../src/types';
 
 const account: AccountInfo = {
@@ -92,6 +96,71 @@ describe('analyzeSnapshot', () => {
     );
 
     assert.equal(alerts[0].code, 'long_watering_run');
+  });
+});
+
+describe('getWateringReview', () => {
+  it('summarizes recent watering and weather events', async () => {
+    const review = await getWateringReview(
+      {
+        async getInfo() {
+          return account;
+        },
+        async getDeviceEvents(deviceId: string, startTs: number, endTs: number) {
+          assert.equal(deviceId, 'dev-1');
+          assert.equal(endTs - startTs, 2 * 24 * 60 * 60 * 1000);
+          return [
+            {
+              eventDate: endTs - 1000,
+              topic: 'WATERING',
+              subType: 'ZONE_COMPLETED',
+              summary: 'Citrus completed watering at 05:30 AM (PDT) for 12 minutes.',
+            },
+            {
+              eventDate: endTs - 2000,
+              topic: 'WATERING',
+              subType: 'ZONE_STOPPED',
+              summary: 'Citrus stopped watering at 05:15 AM (PDT) for 1 minutes.',
+            },
+            {
+              eventDate: endTs - 3000,
+              topic: 'WATERING',
+              subType: 'SCHEDULE_COMPLETED',
+              summary: 'Morning ran for 12 minutes.',
+            },
+            {
+              eventDate: endTs - 4000,
+              category: 'SCHEDULE',
+              subType: 'SCHEDULE_RULE_SKIP_ADDED',
+              summary: 'Morning was skipped because rain was observed.',
+            },
+          ];
+        },
+      },
+      { now: new Date('2026-06-02T00:00:00Z') }
+    );
+
+    assert.equal(review.devices[0].completedZoneRuns, 1);
+    assert.equal(review.devices[0].stoppedZoneRuns, 1);
+    assert.equal(review.devices[0].completedScheduleRuns, 1);
+    assert.equal(review.devices[0].weatherSkipCount, 1);
+    assert.equal(review.devices[0].estimatedWateringMinutes, 13);
+    assert.match(review.devices[0].notes.join('\n'), /weather\/rain skip/);
+    assert.match(review.devices[0].notes.join('\n'), /stopped watering/);
+  });
+
+  it('keeps reporting when event history is unavailable', async () => {
+    const review = await getWateringReview({
+      async getInfo() {
+        return account;
+      },
+      async getDeviceEvents() {
+        throw new Error('temporary Rachio error');
+      },
+    });
+
+    assert.equal(review.devices[0].eventCount, 0);
+    assert.match(review.devices[0].notes.join('\n'), /event history unavailable/);
   });
 });
 
